@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Capital Cultural — Sistema de Curadoria Estratégica</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#1a1a18;--ink-soft:#4a4a45;--ink-muted:#8a8a82;
+  --paper:#faf9f6;--paper-warm:#f3f1ec;--paper-dark:#e8e5de;
+  --gold:#b8923a;--gold-light:#d4aa5a;--gold-pale:#f5edd8;
+  --red:#8b2c2c;--teal:#1d5c52;--border:rgba(26,26,24,.12);
+  --serif:'Playfair Display',Georgia,serif;--sans:'DM Sans',system-ui,sans-serif;
+}
+html{scroll-behavior:smooth}
+body{background:var(--paper);font-family:var(--sans);color:var(--ink);min-height:100vh}
+
+/* ── LOCK SCREEN ── */
+#lock{position:fixed;inset:0;background:var(--ink);display:flex;align-items:center;justify-content:center;z-index:999;flex-direction:column;gap:2rem}
+#lock h1{font-family:var(--serif);font-size:2rem;color:#faf9f6;font-weight:400;letter-spacing:-.02em}
+#lock h1 em{font-style:italic;color:var(--gold-light)}
+#lock-form{display:flex;flex-direction:column;gap:12px;width:320px}
+#lock-input{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);padding:14px 16px;font-family:var(--sans);font-size:14px;color:#faf9f6;outline:none;letter-spacing:.1em}
+#lock-input::placeholder{color:rgba(250,249,246,.3)}
+#lock-input:focus{border-color:rgba(184,146,58,.5)}
+#lock-btn{background:var(--gold);border:none;padding:14px;font-family:var(--sans);font-size:12px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--ink);cursor:pointer}
+#lock-btn:hover{opacity:.85}
+#lock-err{font-size:12px;color:#e07070;text-align:center;min-height:16px}
+#lock-hint{font-size:11px;color:rgba(250,249,246,.3);text-align:center;letter-spacing:.05em}
+
+/* ── MASTHEAD ── */
+.masthead{border-bottom:3px double var(--ink);padding:1.5rem 2rem 1rem;text-align:center}
+.masthead-eyebrow{font-size:10px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:.5rem}
+.masthead-title{font-family:var(--serif);font-size:2.8rem;font-weight:400;line-height:1.1;color:var(--ink);letter-spacing:-.02em}
+.masthead-title em{font-style:italic;color:var(--gold)}
+.masthead-meta{display:flex;align-items:center;justify-content:center;gap:1.5rem;margin-top:.75rem;font-size:11px;color:var(--ink-muted);letter-spacing:.08em}
+.masthead-meta .dot{width:3px;height:3px;border-radius:50%;background:var(--ink-muted)}
+
+/* ── NAV ── */
+.nav-strip{border-bottom:1px solid var(--ink);padding:.5rem 2rem;display:flex;align-items:center;gap:0;overflow-x:auto;position:sticky;top:0;background:var(--paper);z-index:10}
+.nav-tab{font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-muted);padding:.4rem 1rem;cursor:pointer;border:none;background:none;border-right:1px solid var(--border);transition:color .15s;white-space:nowrap}
+.nav-tab:last-child{border-right:none}
+.nav-tab:first-child{padding-left:0}
+.nav-tab.active,.nav-tab:hover{color:var(--ink)}
+
+/* ── LAYOUT ── */
+.main-layout{display:grid;grid-template-columns:1fr 280px;max-width:1100px;margin:0 auto}
+.content-col{border-right:1px solid var(--border);padding:2rem}
+.sidebar-col{padding:2rem 1.5rem}
+
+/* ── PANELS ── */
+.panel{display:none}.panel.active{display:block}
+
+/* ── TEMA CENTRAL ── */
+.tema-central{background:var(--ink);color:var(--paper);padding:2rem;margin-bottom:2rem;position:relative;overflow:hidden}
+.tema-central::before{content:'"';position:absolute;top:-1rem;left:1.5rem;font-family:var(--serif);font-size:8rem;color:rgba(255,255,255,.06);line-height:1}
+.tema-label{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-light);margin-bottom:.75rem}
+.tema-title{font-family:var(--serif);font-size:1.9rem;font-weight:400;line-height:1.2;margin-bottom:1rem}
+.tema-desc{font-size:13px;line-height:1.7;color:rgba(250,249,246,.7)}
+
+/* ── SECTION HEADER ── */
+.section-header{display:flex;align-items:baseline;gap:1rem;margin-bottom:1.5rem;padding-bottom:.75rem;border-bottom:1px solid var(--ink)}
+.section-number{font-family:var(--serif);font-size:2rem;font-weight:400;color:var(--paper-dark);line-height:1}
+.section-label{font-size:10px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-muted)}
+
+/* ── NOTÍCIA ── */
+.noticia-item{border-bottom:1px solid var(--border);padding:1.25rem 0}
+.noticia-item:last-child{border-bottom:none}
+.noticia-fonte{font-size:9px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);margin-bottom:.4rem}
+.noticia-titulo{font-family:var(--serif);font-size:1.05rem;font-weight:500;line-height:1.35;margin-bottom:.4rem}
+.noticia-porq{font-size:12.5px;line-height:1.6;color:var(--ink-soft);margin-bottom:.6rem}
+.noticia-link{font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--teal);text-decoration:none;border-bottom:1px solid var(--teal);padding-bottom:1px}
+
+/* ── REFERÊNCIA ── */
+.ref-item{display:grid;grid-template-columns:48px 1fr;gap:.75rem;padding:1rem 0;border-bottom:1px solid var(--border)}
+.ref-item:last-child{border-bottom:none}
+.ref-inicial{width:48px;height:48px;background:var(--gold-pale);border:1px solid var(--gold);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:1.1rem;font-weight:400;color:var(--gold);flex-shrink:0}
+.ref-nome{font-family:var(--serif);font-size:.95rem;font-weight:500;color:var(--ink);margin-bottom:2px}
+.ref-area{font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:4px}
+.ref-desc{font-size:12px;line-height:1.55;color:var(--ink-soft)}
+
+/* ── CONEXÃO ── */
+.conexao-item{background:var(--paper-warm);border-left:3px solid var(--gold);padding:.875rem 1rem;margin-bottom:.75rem;font-size:13px;line-height:1.6;color:var(--ink-soft);font-style:italic;font-family:var(--serif)}
+
+/* ── EXERCÍCIO ── */
+.exercicio-box{background:var(--ink);color:var(--paper);padding:1.75rem;margin-top:1rem}
+.exercicio-label{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-light);margin-bottom:1rem}
+.exercicio-pergunta{font-family:var(--serif);font-size:1.1rem;font-weight:400;line-height:1.5;margin-bottom:1.25rem}
+.exercicio-input{width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);padding:.875rem 1rem;font-family:var(--sans);font-size:13px;color:var(--paper);resize:vertical;min-height:100px;outline:none}
+.exercicio-input::placeholder{color:rgba(250,249,246,.35)}
+.exercicio-input:focus{border-color:rgba(184,146,58,.5)}
+.exercicio-btn{margin-top:.75rem;background:var(--gold);border:none;padding:.7rem 1.5rem;font-family:var(--sans);font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);cursor:pointer}
+.exercicio-btn:hover{opacity:.85}
+
+/* ── SIDEBAR ── */
+.sidebar-widget{margin-bottom:2rem;padding-bottom:2rem;border-bottom:1px solid var(--border)}
+.sidebar-widget:last-child{border-bottom:none}
+.sidebar-label{font-size:9px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:1rem}
+.btn-main{width:100%;background:var(--ink);border:none;padding:1rem;font-family:var(--sans);font-size:12px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--paper);cursor:pointer;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-main:hover{opacity:.8}
+.btn-sec{width:100%;background:transparent;border:1px solid var(--ink);padding:.85rem;font-family:var(--sans);font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);cursor:pointer;margin-bottom:8px}
+.btn-sec:hover{background:var(--paper-warm)}
+.tag-cloud{display:flex;flex-wrap:wrap;gap:6px}
+.tag{font-size:10px;padding:4px 10px;border:1px solid var(--border);color:var(--ink-soft);cursor:pointer;background:transparent}
+.tag:hover,.tag.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+
+/* ── ACERVO ── */
+.acervo-item{padding:.75rem 0;border-bottom:1px solid var(--border);cursor:pointer}
+.acervo-item:last-child{border-bottom:none}
+.acervo-data{font-size:10px;color:var(--ink-muted)}
+.acervo-tema{font-family:var(--serif);font-size:.9rem;color:var(--ink);margin:.2rem 0}
+.acervo-tag{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);margin-right:6px}
+.acervo-reflexao{font-size:12px;color:var(--ink-soft);line-height:1.5;margin-top:.4rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+/* ── ACERVO DETALHE ── */
+#detalhe-overlay{position:fixed;inset:0;background:rgba(26,26,24,.8);z-index:100;display:none;align-items:center;justify-content:center;padding:2rem}
+#detalhe-overlay.open{display:flex}
+#detalhe-box{background:var(--paper);max-width:600px;width:100%;max-height:80vh;overflow-y:auto;padding:2rem;position:relative}
+#detalhe-close{position:absolute;top:1rem;right:1rem;background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--ink-muted)}
+
+/* ── API BOX ── */
+.api-box{background:var(--paper-warm);border:1px solid var(--border);padding:1rem;margin-bottom:1rem}
+.api-box input{width:100%;background:white;border:1px solid var(--border);padding:.6rem .75rem;font-family:var(--sans);font-size:12px;color:var(--ink);outline:none;margin:.5rem 0}
+.api-status{font-size:11px;padding:.3rem .6rem;display:inline-block}
+.api-status.ok{background:#d4edda;color:#1d5c52}
+.api-status.no{background:#f8d7da;color:var(--red)}
+
+/* ── IA GERANDO ── */
+.ia-loading{display:none;text-align:center;padding:2rem;color:var(--ink-muted)}
+.ia-loading.show{display:block}
+.ia-dots::after{content:'...';animation:dots 1.2s infinite}
+@keyframes dots{0%{content:'.'}33%{content:'..'}66%{content:'...'}100%{content:'.'}}
+
+/* ── IA RESULTADO ── */
+#ia-resultado{background:var(--paper-warm);border-left:3px solid var(--gold);padding:1.5rem;margin-top:1.5rem;display:none}
+#ia-resultado.show{display:block}
+#ia-resultado h3{font-family:var(--serif);font-size:1.2rem;margin-bottom:1rem;color:var(--ink)}
+#ia-resultado .ia-body{font-size:13px;line-height:1.8;color:var(--ink-soft);white-space:pre-wrap}
+
+/* ── PROGRESS ── */
+.progress-bar{height:2px;background:var(--paper-dark);margin:1.5rem 0;position:relative}
+.progress-fill{height:100%;background:var(--gold);transition:width .4s}
+.progress-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--ink-muted);margin-top:4px}
+
+/* ── DIVIDER ── */
+.divider{text-align:center;color:var(--gold);font-size:14px;letter-spacing:.5em;margin:1.5rem 0;opacity:.5}
+
+
+/* ── GALERIA DE FONTES ── */
+.gal-filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:1.5rem;align-items:center}
+.gal-filter-label{font-size:10px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-muted);margin-right:4px}
+.gal-tag{font-size:10px;padding:5px 12px;border:1px solid var(--border);color:var(--ink-soft);cursor:pointer;background:transparent;transition:all .15s}
+.gal-tag:hover,.gal-tag.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.gal-tag.tema-tag.on{background:var(--gold);border-color:var(--gold);color:var(--ink)}
+.gal-date-input{font-size:11px;padding:5px 10px;border:1px solid var(--border);color:var(--ink-soft);font-family:var(--sans);background:white;outline:none;cursor:pointer}
+.gal-date-input:focus{border-color:var(--gold)}
+.gal-sep{width:1px;height:20px;background:var(--border);margin:0 4px}
+.gal-count{font-size:11px;color:var(--ink-muted);margin-left:auto;font-style:italic}
+.gal-clear{font-size:10px;color:var(--teal);background:none;border:none;cursor:pointer;padding:5px 8px;letter-spacing:.05em}
+.gal-clear:hover{text-decoration:underline}
+
+.fonte-card{border:1px solid var(--border);margin-bottom:1rem;transition:border-color .15s}
+.fonte-card:hover{border-color:var(--gold)}
+.fonte-card-header{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;padding:1rem 1.25rem .75rem}
+.fonte-card-left{flex:1;min-width:0}
+.fonte-card-fonte{font-size:9px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);margin-bottom:.35rem}
+.fonte-card-titulo{font-family:var(--serif);font-size:1rem;font-weight:500;line-height:1.35;color:var(--ink);margin-bottom:.35rem}
+.fonte-card-porq{font-size:12px;line-height:1.6;color:var(--ink-soft)}
+.fonte-card-footer{display:flex;align-items:center;gap:.75rem;padding:.6rem 1.25rem;border-top:1px solid var(--border);background:var(--paper-warm)}
+.fonte-card-data{font-size:10px;color:var(--ink-muted)}
+.fonte-card-tema{font-size:10px;font-weight:500;padding:2px 8px;border:1px solid var(--gold);color:var(--gold);letter-spacing:.05em}
+.fonte-card-link{font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--teal);text-decoration:none;border-bottom:1px solid var(--teal);padding-bottom:1px;margin-left:auto}
+.fonte-salvar-btn{font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-muted);background:none;border:1px solid var(--border);padding:4px 10px;cursor:pointer}
+.fonte-salvar-btn:hover{background:var(--gold-pale);border-color:var(--gold);color:var(--gold)}
+.fonte-salvar-btn.saved{color:var(--teal);border-color:var(--teal)}
+
+.gal-empty{text-align:center;padding:3rem 1rem;color:var(--ink-muted)}
+.gal-empty-title{font-family:var(--serif);font-size:1.1rem;margin-bottom:.5rem;color:var(--ink-soft)}
+.gal-add-box{background:var(--paper-warm);border:1px dashed var(--border);padding:1.25rem;margin-bottom:1.5rem}
+.gal-add-box input,.gal-add-box textarea,.gal-add-box select{width:100%;background:white;border:1px solid var(--border);padding:.6rem .75rem;font-family:var(--sans);font-size:12px;color:var(--ink);outline:none;margin-bottom:.5rem}
+.gal-add-box textarea{min-height:60px;resize:vertical}
+.gal-add-row{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:2rem;right:2rem;background:var(--ink);color:var(--paper);padding:.75rem 1.25rem;font-size:12px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:999;max-width:300px}
+#toast.show{opacity:1}
+
+@media(max-width:700px){
+  .main-layout{grid-template-columns:1fr}
+  .content-col{border-right:none}
+  .sidebar-col{border-top:1px solid var(--border)}
+  .masthead-title{font-size:2rem}
+}
+</style>
+</head>
+<body>
+
+<!-- LOCK SCREEN -->
+<div id="lock">
+  <div style="text-align:center">
+    <div style="font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:rgba(250,249,246,.35);margin-bottom:.75rem">Acesso Restrito</div>
+    <h1><em>Capital Cultural</em></h1>
+    <div style="font-size:12px;color:rgba(250,249,246,.35);margin-top:.5rem;letter-spacing:.05em">Sistema de Curadoria Estratégica</div>
+  </div>
+  <div id="lock-form">
+    <input id="lock-input" type="password" placeholder="••••••••••" autocomplete="current-password">
+    <button id="lock-btn" onclick="checkPassword()">Entrar</button>
+    <div id="lock-err"></div>
+    <div id="lock-hint">Pressione Enter para continuar</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app-content" style="display:none">
+
+<div class="masthead">
+  <div class="masthead-eyebrow">Sistema Operacional de</div>
+  <div class="masthead-title"><em>Capital Cultural</em></div>
+  <div class="masthead-meta">
+    <span id="data-hoje"></span>
+    <span class="dot"></span>
+    <span>Sessão Diária · 30 min</span>
+    <span class="dot"></span>
+    <span>Curadoria Estratégica</span>
+  </div>
+</div>
+
+<div class="nav-strip">
+  <button class="nav-tab active" onclick="showPanel('sessao',this)">Sessão de Hoje</button>
+  <button class="nav-tab" onclick="showPanel('radar',this)">Radar</button>
+  <button class="nav-tab" onclick="showPanel('referencias',this)">Referências</button>
+  <button class="nav-tab" onclick="showPanel('conexoes',this)">Conexões</button>
+  <button class="nav-tab" onclick="showPanel('acervo',this)">Meu Acervo</button>
+  <button class="nav-tab" onclick="showPanel('galeria',this)">Galeria de Fontes</button>
+  <button class="nav-tab" onclick="showPanel('config',this)">Configurar IA</button>
+</div>
+
+<div class="main-layout">
+  <div class="content-col">
+
+    <!-- SESSÃO -->
+    <div id="panel-sessao" class="panel active">
+      <div class="tema-central">
+        <div class="tema-label">Tema Central · <span id="sessao-num">Sessão #001</span></div>
+        <div class="tema-title" id="tema-titulo">O Luxo do Silêncio:<br>quando o excesso perde o sentido</div>
+        <div class="tema-desc" id="tema-desc">A saturação da ostentação digital está criando uma nova gramática de status — discreta, densa, e profundamente cultural. O que isso revela sobre desejo, identidade e consumo contemporâneo?</div>
+      </div>
+
+      <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+      <div class="progress-labels"><span>Início</span><span id="prog-txt">Sessão não iniciada</span><span>30 min</span></div>
+
+      <div class="divider">✦ ✦ ✦</div>
+
+      <!-- IA GERA SESSÃO -->
+      <div class="section-header">
+        <div class="section-number">IA</div>
+        <div class="section-label">Gerar curadoria com inteligência artificial</div>
+      </div>
+
+      <div class="api-box">
+        <div style="font-size:11px;color:var(--ink-muted);margin-bottom:.5rem">Tema personalizado (opcional)</div>
+        <input type="text" id="tema-custom" placeholder="Ex: O novo consumo feminino, A volta da sofisticação, Estética e identidade..." style="width:100%;background:white;border:1px solid var(--border);padding:.6rem .75rem;font-family:var(--sans);font-size:13px;color:var(--ink);outline:none">
+        <button class="exercicio-btn" style="margin-top:.75rem" onclick="gerarSessao()">✦ Gerar Sessão Completa com IA</button>
+      </div>
+
+      <div class="ia-loading" id="ia-loading">
+        <div style="font-family:var(--serif);font-size:1.1rem;margin-bottom:.5rem">Curador estratégico pesquisando<span class="ia-dots"></span></div>
+        <div style="font-size:12px">Selecionando referências e conexões relevantes</div>
+      </div>
+
+      <div id="ia-resultado">
+        <h3 id="ia-resultado-titulo"></h3>
+        <div class="ia-body" id="ia-resultado-body"></div>
+      </div>
+
+      <div style="margin-top:2rem" class="section-header">
+        <div class="section-number">05</div>
+        <div class="section-label">Exercício de repertório — sua reflexão</div>
+      </div>
+
+      <div class="exercicio-box">
+        <div class="exercicio-label">Construção de Pensamento Crítico</div>
+        <div class="exercicio-pergunta" id="exercicio-pergunta">O que os movimentos de hoje — quiet luxury, marca como comunidade, autenticidade na era da IA — revelam sobre a transformação do desejo contemporâneo? Que padrão você percebe atravessando todos eles?</div>
+        <textarea class="exercicio-input" id="reflexao-txt" placeholder="Escreva sua reflexão aqui. Não há resposta certa — há a sua leitura do mundo..."></textarea>
+        <button class="exercicio-btn" onclick="salvarReflexao()">Salvar no Acervo →</button>
+      </div>
+    </div>
+
+    <!-- RADAR -->
+    <div id="panel-radar" class="panel">
+      <div class="section-header">
+        <div class="section-number">02</div>
+        <div class="section-label">Radar — notícias e movimentos recentes</div>
+      </div>
+      <div style="font-size:12px;color:var(--ink-muted);margin-bottom:1.5rem;font-style:italic">Gere a sessão na aba "Sessão de Hoje" para ver o radar completo do dia, ou explore os itens abaixo.</div>
+
+      <div class="noticia-item">
+        <div class="noticia-fonte">Business of Fashion</div>
+        <div class="noticia-titulo">Quiet Luxury Is Over. Now Comes "Loud Quiet"</div>
+        <div class="noticia-porq">O movimento pós-quiet luxury está redefinindo como marcas comunicam exclusividade sem recorrer ao logomania nem ao minimalismo extremo. Um sinal sobre a próxima gramática estética do mercado premium.</div>
+        <a class="noticia-link" href="https://www.businessoffashion.com" target="_blank">Acessar →</a>
+      </div>
+
+      <div class="noticia-item">
+        <div class="noticia-fonte">Harvard Business Review</div>
+        <div class="noticia-titulo">Why Brands Are Becoming Communities — and Why Most Will Fail</div>
+        <div class="noticia-porq">A transição de marca como produto para marca como identidade coletiva é real, mas exige uma lógica completamente diferente de construção de pertencimento.</div>
+        <a class="noticia-link" href="https://hbr.org" target="_blank">Acessar →</a>
+      </div>
+
+      <div class="noticia-item">
+        <div class="noticia-fonte">The Economist</div>
+        <div class="noticia-titulo">The New Anxiety Economy: how status migrated from objects to experiences to identity</div>
+        <div class="noticia-porq">Uma análise rigorosa sobre como a ansiedade social se tornou o motor invisível do consumo contemporâneo — e como marcas estão respondendo com novos rituais de pertencimento.</div>
+        <a class="noticia-link" href="https://economist.com" target="_blank">Acessar →</a>
+      </div>
+
+      <div class="noticia-item">
+        <div class="noticia-fonte">MIT Technology Review</div>
+        <div class="noticia-titulo">AI Is Changing What "Authentic" Means Online</div>
+        <div class="noticia-porq">Com a proliferação de conteúdo gerado por IA, o valor da imperfeição humana está aumentando. Movimento importante para quem pensa construção de marca e capital simbólico na era digital.</div>
+        <a class="noticia-link" href="https://technologyreview.com" target="_blank">Acessar →</a>
+      </div>
+
+      <div class="noticia-item">
+        <div class="noticia-fonte">Consumoteca</div>
+        <div class="noticia-titulo">O novo luxo brasileiro: entre ostentação e discernimento</div>
+        <div class="noticia-porq">Michel Alcoforado mapeia como as aspirações de consumo das classes médias brasileiras estão sendo recodificadas — com implicações diretas para marcas que operam no Brasil.</div>
+        <a class="noticia-link" href="https://consumoteca.com.br" target="_blank">Acessar →</a>
+      </div>
+    </div>
+
+    <!-- REFERÊNCIAS -->
+    <div id="panel-referencias" class="panel">
+      <div class="section-header">
+        <div class="section-number">03</div>
+        <div class="section-label">Referências intelectuais</div>
+      </div>
+
+      <div class="ref-item">
+        <div class="ref-inicial">PB</div>
+        <div>
+          <div class="ref-nome">Pierre Bourdieu</div>
+          <div class="ref-area">Sociologia · Capital Cultural</div>
+          <div class="ref-desc"><em>A Distinção</em> (1979) é o fundamento. Como gosto, consumo e classe social se entrelaçam de forma invisível. Leitura obrigatória para entender por que as pessoas compram o que compram.</div>
+        </div>
+      </div>
+
+      <div class="ref-item">
+        <div class="ref-inicial">GL</div>
+        <div>
+          <div class="ref-nome">Gilles Lipovetsky</div>
+          <div class="ref-area">Filosofia · Luxo e Hipermodernidade</div>
+          <div class="ref-desc"><em>O Luxo Eterno</em> e <em>A Era do Vazio</em> — como o luxo migrou de objeto para experiência, e como o individualismo contemporâneo molda o desejo.</div>
+        </div>
+      </div>
+
+      <div class="ref-item">
+        <div class="ref-inicial">BH</div>
+        <div>
+          <div class="ref-nome">Byung-Chul Han</div>
+          <div class="ref-area">Filosofia · Sociedade do Desempenho</div>
+          <div class="ref-desc"><em>A Sociedade da Transparência</em> e <em>No Enxame</em> — a melhor crítica filosófica contemporânea ao excesso de visibilidade. Diretamente relevante para o movimento quiet luxury.</div>
+        </div>
+      </div>
+
+      <div class="ref-item">
+        <div class="ref-inicial">RS</div>
+        <div>
+          <div class="ref-nome">Rory Sutherland</div>
+          <div class="ref-area">Estratégia · Behavioral Economics</div>
+          <div class="ref-desc"><em>Alchemy</em> — como valor percebido funciona de forma contraintuitiva. Uma das melhores leituras para pensar marca, posicionamento e por que as coisas custam o que custam.</div>
+        </div>
+      </div>
+
+      <div class="ref-item">
+        <div class="ref-inicial">JB</div>
+        <div>
+          <div class="ref-nome">Jean Baudrillard</div>
+          <div class="ref-area">Filosofia · Simulacro e Consumo</div>
+          <div class="ref-desc"><em>A Sociedade de Consumo</em> — as pessoas não consomem objetos, consomem signos. Referência incontornável para entender a lógica do status e do desejo contemporâneo.</div>
+        </div>
+      </div>
+
+      <div class="ref-item">
+        <div class="ref-inicial">MA</div>
+        <div>
+          <div class="ref-nome">Michel Alcoforado</div>
+          <div class="ref-area">Comportamento · Consumo Brasileiro</div>
+          <div class="ref-desc">Pesquisador brasileiro referência em comportamento do consumidor. Seu trabalho sobre consumo feminino e as novas classes médias brasileiras é raro, preciso e extremamente aplicável.</div>
+        </div>
+      </div>
+
+      <div class="ref-item">
+        <div class="ref-inicial">AC</div>
+        <div>
+          <div class="ref-nome">Ana Couto</div>
+          <div class="ref-area">Branding · Brasil</div>
+          <div class="ref-desc">Uma das maiores especialistas em branding do Brasil. Seu trabalho conecta identidade cultural brasileira com construção de marca de longo prazo.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONEXÕES -->
+    <div id="panel-conexoes" class="panel">
+      <div class="section-header">
+        <div class="section-number">04</div>
+        <div class="section-label">Conexões estratégicas abertas</div>
+      </div>
+      <div style="font-size:12px;color:var(--ink-muted);margin-bottom:1.5rem;font-style:italic">Caminhos mentais para explorar — sem conclusões fechadas</div>
+
+      <div class="conexao-item">"A busca por cafés sofisticados e 'terceiros lugares' pode revelar menos sobre hospitalidade e mais sobre a transformação do consumo em afirmação de identidade."</div>
+      <div class="conexao-item">"O movimento quiet luxury e a valorização do 'sem logo' pode estar relacionado à saturação visual das redes — uma reação estética a um mundo de excesso de imagem."</div>
+      <div class="conexao-item">"Se a IA está tornando o conteúdo abundante e barato, o que se torna escasso e valioso? Talvez a imperfeição humana, a trajetória visível, a opacidade intencional."</div>
+      <div class="conexao-item">"Marcas que viraram comunidades bem-sucedidas podem não ser marcas que tentaram criar comunidades — mas marcas que já tinham uma ideologia, e a comunidade surgiu como consequência."</div>
+      <div class="conexao-item">"O novo consumo feminino pode ser lido como uma renegociação do contrato social em torno de quem define o que é sofisticação — e para quem."</div>
+      <div class="conexao-item">"A geopolítica e a estética caminham juntas: períodos de instabilidade produzem demanda por símbolos de permanência, solidez e herança — o que explica a resiliência do luxo em crises."</div>
+    </div>
+
+    <!-- ACERVO -->
+    <div id="panel-acervo" class="panel">
+      <div class="section-header">
+        <div class="section-number">→</div>
+        <div class="section-label">Meu acervo · Biblioteca pessoal</div>
+      </div>
+      <div style="font-size:12px;color:var(--ink-muted);margin-bottom:1.5rem">Suas reflexões organizadas por tema, data e categoria. Construção de longo prazo.</div>
+      <div id="acervo-lista"></div>
+    </div>
+
+
+    <!-- GALERIA DE FONTES -->
+    <div id="panel-galeria" class="panel">
+      <div class="section-header">
+        <div class="section-number">◈</div>
+        <div class="section-label">Galeria de Fontes · Biblioteca de referências</div>
+      </div>
+      <div style="font-size:12px;color:var(--ink-muted);margin-bottom:1.5rem;line-height:1.6">Todas as fontes e matérias salvas das suas sessões. Filtre por tema ou data para encontrar referências específicas.</div>
+
+      <!-- ADD FONTE -->
+      <div class="gal-add-box">
+        <div style="font-size:10px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:.75rem">+ Adicionar fonte manualmente</div>
+        <input type="text" id="gal-add-titulo" placeholder="Título da matéria ou artigo">
+        <input type="text" id="gal-add-fonte" placeholder="Veículo / fonte (ex: The Economist, HBR, Folha...)">
+        <textarea id="gal-add-porq" placeholder="Por que isso importa — contextualização breve"></textarea>
+        <div class="gal-add-row">
+          <input type="text" id="gal-add-link" placeholder="Link (URL)">
+          <input type="text" id="gal-add-tema" placeholder="Tema (ex: Luxo, IA, Branding...)">
+        </div>
+        <button class="exercicio-btn" onclick="adicionarFonte()">Salvar na Galeria</button>
+      </div>
+
+      <!-- FILTROS -->
+      <div class="gal-filters" id="gal-filtros">
+        <span class="gal-filter-label">Tema</span>
+        <div id="gal-tema-tags"></div>
+        <div class="gal-sep"></div>
+        <span class="gal-filter-label">Data</span>
+        <input type="date" class="gal-date-input" id="gal-data-de" title="De" onchange="renderGaleria()">
+        <span style="font-size:11px;color:var(--ink-muted)">até</span>
+        <input type="date" class="gal-date-input" id="gal-data-ate" title="Até" onchange="renderGaleria()">
+        <button class="gal-clear" onclick="limparFiltrosGaleria()">Limpar filtros</button>
+        <span class="gal-count" id="gal-count"></span>
+      </div>
+
+      <div id="galeria-lista"></div>
+    </div>
+
+    <!-- CONFIG -->
+    <div id="panel-config" class="panel">
+      <div class="section-header">
+        <div class="section-number">⚙</div>
+        <div class="section-label">Configuração da IA</div>
+      </div>
+      <div style="font-size:13px;line-height:1.7;color:var(--ink-soft);margin-bottom:1.5rem">Para gerar curadorias reais com IA, insira sua chave da API da Anthropic. Ela fica salva apenas neste navegador.</div>
+
+      <div class="api-box">
+        <div style="font-size:11px;color:var(--ink-muted);margin-bottom:.5rem">Chave da API Anthropic (sk-ant-...)</div>
+        <input type="password" id="api-key-input" placeholder="sk-ant-api03-...">
+        <button class="exercicio-btn" onclick="salvarApiKey()">Salvar Chave</button>
+        <div style="margin-top:.75rem" id="api-status-msg"></div>
+      </div>
+
+      <div style="font-size:12px;color:var(--ink-muted);line-height:1.7;margin-top:1rem">
+        Não tem chave ainda? Acesse <a href="https://console.anthropic.com" target="_blank" style="color:var(--teal);border-bottom:1px solid var(--teal)">console.anthropic.com</a> → API Keys → Create Key.<br><br>
+        Sem a chave, o sistema funciona com conteúdo demonstrativo.
+      </div>
+    </div>
+
+  </div><!-- /content-col -->
+
+  <div class="sidebar-col">
+
+    <div class="sidebar-widget">
+      <div class="sidebar-label">Iniciar</div>
+      <button class="btn-main" onclick="iniciarSessao()">▶ Iniciar Sessão de Hoje</button>
+      <button class="btn-sec" onclick="gerarSessao()">✦ Gerar com IA</button>
+    </div>
+
+    <div class="sidebar-widget">
+      <div class="sidebar-label">Áreas de Interesse</div>
+      <div class="tag-cloud">
+        <button class="tag on" onclick="this.classList.toggle('on')">Branding</button>
+        <button class="tag on" onclick="this.classList.toggle('on')">Luxo</button>
+        <button class="tag" onclick="this.classList.toggle('on')">Comportamento</button>
+        <button class="tag on" onclick="this.classList.toggle('on')">IA</button>
+        <button class="tag" onclick="this.classList.toggle('on')">Sociologia</button>
+        <button class="tag" onclick="this.classList.toggle('on')">Estética</button>
+        <button class="tag on" onclick="this.classList.toggle('on')">Consumo</button>
+        <button class="tag" onclick="this.classList.toggle('on')">Feminilidade</button>
+        <button class="tag" onclick="this.classList.toggle('on')">Status</button>
+        <button class="tag" onclick="this.classList.toggle('on')">Poder</button>
+        <button class="tag" onclick="this.classList.toggle('on')">Cultura</button>
+        <button class="tag" onclick="this.classList.toggle('on')">Negócios</button>
+        <button class="tag" onclick="this.classList.toggle('on')">Internet</button>
+        <button class="tag" onclick="this.classList.toggle('on')">Geopolítica</button>
+        <button class="tag" onclick="this.classList.toggle('on')">Filosofia</button>
+      </div>
+    </div>
+
+    <div class="sidebar-widget">
+      <div class="sidebar-label">Sessões recentes</div>
+      <div id="sidebar-sessoes">
+        <div style="font-size:11px;color:var(--ink-muted);font-style:italic">Nenhuma sessão ainda</div>
+      </div>
+    </div>
+
+    <div class="sidebar-widget">
+      <div class="sidebar-label">Progresso</div>
+      <div style="font-size:11px;color:var(--ink-muted);line-height:1.6">
+        Sessões: <strong id="total-sessoes">0</strong><br>
+        Reflexões salvas: <strong id="total-reflexoes">0</strong>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</div><!-- /app-content -->
+
+<!-- DETALHE OVERLAY -->
+<div id="detalhe-overlay">
+  <div id="detalhe-box">
+    <button id="detalhe-close" onclick="fecharDetalhe()">✕</button>
+    <div id="detalhe-content"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+// ── SENHA ──
+const SENHA = 'cultural2025';
+
+function checkPassword(){
+  const v = document.getElementById('lock-input').value;
+  if(v === SENHA){
+    document.getElementById('lock').style.display='none';
+    document.getElementById('app-content').style.display='block';
+    init();
+  } else {
+    document.getElementById('lock-err').textContent='Senha incorreta.';
+    document.getElementById('lock-input').value='';
+    document.getElementById('lock-input').focus();
+  }
+}
+document.getElementById('lock-input').addEventListener('keydown', e=>{ if(e.key==='Enter') checkPassword(); });
+
+// ── INIT ──
+let acervo = [];
+let progTimer = null;
+let progVal = 0;
+let apiKey = '';
+
+function init(){
+  setData();
+  acervo = JSON.parse(localStorage.getItem('cc_acervo')||'[]');
+  apiKey = localStorage.getItem('cc_apikey')||'';
+  if(apiKey) document.getElementById('api-key-input').value = apiKey;
+  renderAcervo();
+  renderSessoes();
+  atualizarContadores();
+  initGaleria();
+}
+
+function setData(){
+  const d = new Date();
+  const opts={weekday:'long',day:'numeric',month:'long',year:'numeric'};
+  document.getElementById('data-hoje').textContent = d.toLocaleDateString('pt-BR',opts);
+}
+
+// ── PANELS ──
+function showPanel(id, btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  if(btn) btn.classList.add('active');
+}
+
+// ── PROGRESSO ──
+function iniciarSessao(){
+  if(progTimer) return;
+  progVal=0;
+  const fill=document.getElementById('prog-fill');
+  const txt=document.getElementById('prog-txt');
+  txt.textContent='Em andamento...';
+  progTimer=setInterval(()=>{
+    progVal=Math.min(progVal+(100/1800),100);
+    fill.style.width=progVal.toFixed(1)+'%';
+    const m=Math.round((progVal/100)*30);
+    txt.textContent=m+' min de 30';
+    if(progVal>=100){ clearInterval(progTimer); txt.textContent='Sessão concluída ✓'; progTimer=null; }
+  },1000);
+  toast('Sessão iniciada! Bom estudo.');
+}
+
+// ── GERAR COM IA ──
+async function gerarSessao(){
+  const tema = document.getElementById('tema-custom').value.trim();
+  const key = localStorage.getItem('cc_apikey')||'';
+
+  const load = document.getElementById('ia-loading');
+  const res = document.getElementById('ia-resultado');
+  load.classList.add('show');
+  res.classList.remove('show');
+
+  const areas = [...document.querySelectorAll('.tag.on')].map(t=>t.textContent).join(', ');
+  const temaFinal = tema || 'O Luxo do Silêncio e a transformação do status na era digital';
+
+  if(!key){
+    // MODO DEMO
+    await new Promise(r=>setTimeout(r,1800));
+    load.classList.remove('show');
+    document.getElementById('ia-resultado-titulo').textContent = '✦ Sessão: '+temaFinal;
+    document.getElementById('ia-resultado-body').textContent =
+`RADAR DO DIA
+
+01. Business of Fashion — "Quiet Luxury Is Over"
+Por que importa: o movimento pós-quiet luxury está redefinindo como marcas comunicam exclusividade. Sinal da próxima gramática estética do premium.
+Link: businessoffashion.com
+
+02. Harvard Business Review — "Why Brands Are Becoming Communities"
+Por que importa: a transição de marca como produto para marca como identidade coletiva exige uma lógica completamente diferente.
+Link: hbr.org
+
+03. MIT Technology Review — "AI Is Changing What Authentic Means"
+Por que importa: com IA tornando conteúdo abundante, imperfeição humana e trajetória visível se tornam ativos raros.
+Link: technologyreview.com
+
+─────────────────────────────
+
+REFERÊNCIAS CONECTADAS
+
+Pierre Bourdieu — A Distinção (1979)
+Como gosto e consumo constroem hierarquias sociais invisíveis.
+
+Byung-Chul Han — A Sociedade da Transparência
+A crítica ao excesso de visibilidade que alimenta o quiet luxury.
+
+Gilles Lipovetsky — O Luxo Eterno
+Como o luxo migrou de objeto para experiência para identidade.
+
+─────────────────────────────
+
+CONEXÕES ESTRATÉGICAS
+
+→ Se marcas estão virando comunidades, o produto passou a ser a identidade — não o objeto.
+→ O quiet luxury pode ser a resposta estética à fadiga algorítmica.
+→ Autenticidade na era da IA não é ausência de curadoria — é a qualidade da curadoria.
+
+─────────────────────────────
+
+EXERCÍCIO DO DIA
+
+Que padrão atravessa esses três movimentos? O que eles revelam sobre o que está sendo revalorizado no desejo contemporâneo?`;
+
+    res.classList.add('show');
+    document.getElementById('exercicio-pergunta').textContent =
+      'Que padrão atravessa os movimentos de hoje — quiet luxury, marca como comunidade, autenticidade na IA? O que está sendo revalorizado no desejo contemporâneo?';
+    toast('Sessão gerada (modo demonstração). Configure sua chave de API para curadoria real.');
+    return;
+  }
+
+  // MODO REAL COM API
+  try {
+    const prompt = `Você é um Curador Estratégico de Capital Cultural. Gere uma sessão diária completa (~30 min de leitura) sobre o tema: "${temaFinal}".
+
+Áreas de interesse do usuário: ${areas}.
+
+Formato obrigatório:
+1. RADAR DO DIA (4-5 itens reais com fonte, título, por que importa, link)
+2. REFERÊNCIAS INTELECTUAIS (3-4 autores/obras conectados ao tema)
+3. CONEXÕES ESTRATÉGICAS (3-4 caminhos mentais abertos, sem conclusões fechadas)
+4. EXERCÍCIO DO DIA (1 pergunta provocativa para reflexão própria)
+
+Regras: Não mastige conclusões. Não explique demais. Priorize profundidade. Use fontes reais e relevantes. Estimule pensamento crítico. NÃO responda a pergunta do exercício.`;
+
+    const resp = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key':key,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,messages:[{role:'user',content:prompt}]})
+    });
+    const data = await resp.json();
+    load.classList.remove('show');
+
+    if(data.content && data.content[0]){
+      const texto = data.content[0].text;
+      document.getElementById('ia-resultado-titulo').textContent='✦ Sessão: '+temaFinal;
+      document.getElementById('ia-resultado-body').textContent=texto;
+      res.classList.add('show');
+
+      // Extrai exercício
+      const match = texto.match(/EXERCÍCIO DO DIA[\s\S]*?(\n.+)/i);
+      if(match) document.getElementById('exercicio-pergunta').textContent = match[1].replace(/^[-–—*•]+\s*/,'').trim();
+
+      // Atualiza tema
+      document.getElementById('tema-titulo').textContent = temaFinal;
+      document.getElementById('sessao-num').textContent = 'Sessão #'+(acervo.length+1).toString().padStart(3,'0');
+
+      toast('Sessão gerada com IA!');
+    } else {
+      throw new Error(JSON.stringify(data));
+    }
+  } catch(e) {
+    load.classList.remove('show');
+    const msg = e && e.message ? e.message : String(e);
+    let erroTxt = 'Erro ao conectar com a IA.';
+    if(msg.includes('401') || msg.includes('invalid x-api-key')) erroTxt = 'Chave de API inválida. Verifique na aba Configurar IA.';
+    else if(msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('CORS')) erroTxt = 'Bloqueio CORS: o navegador não permite chamar a API diretamente de arquivo local.\n\nSolução: abra o arquivo via servidor local ou use o sistema dentro do Claude.ai.';
+    else if(msg.includes('429')) erroTxt = 'Limite de requisições atingido. Aguarde alguns segundos e tente novamente.';
+    document.getElementById('ia-resultado-titulo').textContent = 'Erro na conexão';
+    document.getElementById('ia-resultado-body').textContent = erroTxt + '\n\nDetalhe: ' + msg.slice(0,300);
+    document.getElementById('ia-resultado').classList.add('show');
+    console.error('API Error:', e);
+  }
+}
+
+// ── SALVAR REFLEXÃO ──
+function salvarReflexao(){
+  const texto = document.getElementById('reflexao-txt').value.trim();
+  if(!texto){ toast('Escreva sua reflexão antes de salvar.'); return; }
+  const tags = [...document.querySelectorAll('.tag.on')].map(t=>t.textContent);
+  const tema = document.getElementById('tema-titulo').textContent.replace(/<br>/g,' ');
+  const item = {
+    id: Date.now(),
+    data: new Date().toLocaleDateString('pt-BR'),
+    dataISO: new Date().toISOString(),
+    tema: tema,
+    tags: tags,
+    reflexao: texto,
+    exercicio: document.getElementById('exercicio-pergunta').textContent
+  };
+  acervo.unshift(item);
+  localStorage.setItem('cc_acervo', JSON.stringify(acervo));
+  document.getElementById('reflexao-txt').value='';
+  renderAcervo();
+  renderSessoes();
+  atualizarContadores();
+  showPanel('acervo', document.querySelectorAll('.nav-tab')[4]);
+  toast('Reflexão salva no acervo!');
+}
+
+// ── ACERVO ──
+function renderAcervo(){
+  const el = document.getElementById('acervo-lista');
+  if(!acervo.length){
+    el.innerHTML='<div style="padding:2rem;text-align:center;color:var(--ink-muted)"><div style="font-family:var(--serif);font-size:1.1rem;margin-bottom:.5rem">Acervo vazio</div><div style="font-size:12px">Complete sua primeira sessão para começar a construir sua biblioteca</div></div>';
+    return;
+  }
+  el.innerHTML = acervo.map(item=>`
+    <div class="acervo-item" onclick="abrirDetalhe(${item.id})">
+      <div class="acervo-data">${item.data}</div>
+      <div class="acervo-tema">${item.tema}</div>
+      <div>${item.tags.slice(0,3).map(t=>`<span class="acervo-tag">${t}</span>`).join('')}</div>
+      <div class="acervo-reflexao">${item.reflexao}</div>
+    </div>
+  `).join('');
+}
+
+function abrirDetalhe(id){
+  const item = acervo.find(a=>a.id===id);
+  if(!item) return;
+  document.getElementById('detalhe-content').innerHTML=`
+    <div style="font-size:10px;color:var(--ink-muted);margin-bottom:.5rem">${item.data}</div>
+    <div style="font-family:var(--serif);font-size:1.4rem;margin-bottom:1rem">${item.tema}</div>
+    <div style="font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:1.5rem">${item.tags.join(' · ')}</div>
+    <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-muted);margin-bottom:.5rem">Exercício</div>
+    <div style="font-family:var(--serif);font-size:.95rem;line-height:1.5;color:var(--ink-soft);font-style:italic;margin-bottom:1.5rem;border-left:2px solid var(--gold);padding-left:.75rem">${item.exercicio}</div>
+    <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-muted);margin-bottom:.5rem">Minha Reflexão</div>
+    <div style="font-size:13px;line-height:1.8;color:var(--ink)">${item.reflexao.replace(/\n/g,'<br>')}</div>
+    <div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border)">
+      <button onclick="deletarReflexao(${item.id})" style="font-size:11px;color:var(--red);background:none;border:none;cursor:pointer;letter-spacing:.05em">Excluir reflexão</button>
+    </div>
+  `;
+  document.getElementById('detalhe-overlay').classList.add('open');
+}
+
+function fecharDetalhe(){ document.getElementById('detalhe-overlay').classList.remove('open'); }
+
+function deletarReflexao(id){
+  if(!confirm('Excluir esta reflexão?')) return;
+  acervo = acervo.filter(a=>a.id!==id);
+  localStorage.setItem('cc_acervo',JSON.stringify(acervo));
+  fecharDetalhe();
+  renderAcervo();
+  renderSessoes();
+  atualizarContadores();
+  toast('Reflexão excluída.');
+}
+
+// ── SIDEBAR SESSÕES ──
+function renderSessoes(){
+  const el = document.getElementById('sidebar-sessoes');
+  if(!acervo.length){ el.innerHTML='<div style="font-size:11px;color:var(--ink-muted);font-style:italic">Nenhuma sessão ainda</div>'; return; }
+  el.innerHTML = acervo.slice(0,5).map(item=>`
+    <div style="padding:.4rem 0;border-bottom:1px solid var(--border);cursor:pointer" onclick="abrirDetalhe(${item.id})">
+      <div style="font-size:10px;color:var(--ink-muted)">${item.data}</div>
+      <div style="font-size:12px;font-family:var(--serif);color:var(--ink)">${item.tema.slice(0,40)}${item.tema.length>40?'...':''}</div>
+    </div>
+  `).join('');
+}
+
+function atualizarContadores(){
+  document.getElementById('total-sessoes').textContent = acervo.length;
+  document.getElementById('total-reflexoes').textContent = acervo.length;
+}
+
+// ── API KEY ──
+function salvarApiKey(){
+  const k = document.getElementById('api-key-input').value.trim();
+  if(!k){ toast('Cole sua chave de API.'); return; }
+  localStorage.setItem('cc_apikey', k);
+  apiKey = k;
+  document.getElementById('api-status-msg').innerHTML='<span style="font-size:11px;color:var(--teal)">✓ Chave salva com sucesso</span>';
+  toast('Chave de API salva!');
+}
+
+
+// ── GALERIA DE FONTES ──
+let galeria = [];
+let galTemaAtivo = '';
+
+const FONTES_DEMO = [
+  {id:1001,titulo:'Quiet Luxury Is Over. Now Comes "Loud Quiet"',fonte:'Business of Fashion',porq:'O movimento pós-quiet luxury está redefinindo como marcas comunicam exclusividade sem recorrer ao logomania nem ao minimalismo extremo.',link:'https://www.businessoffashion.com',tema:'Luxo',data:'10/05/2026',dataISO:'2026-05-10'},
+  {id:1002,titulo:'Why Brands Are Becoming Communities — and Why Most Will Fail',fonte:'Harvard Business Review',porq:'A transição de marca como produto para marca como identidade coletiva exige uma lógica completamente diferente de construção de pertencimento.',link:'https://hbr.org',tema:'Branding',data:'10/05/2026',dataISO:'2026-05-10'},
+  {id:1003,titulo:'AI Is Changing What "Authentic" Means Online',fonte:'MIT Technology Review',porq:'Com a proliferação de conteúdo gerado por IA, o valor da imperfeição humana está aumentando — movimento importante para quem pensa construção de marca.',link:'https://technologyreview.com',tema:'IA',data:'10/05/2026',dataISO:'2026-05-10'},
+  {id:1004,titulo:'The New Anxiety Economy: how status migrated from objects to experiences to identity',fonte:'The Economist',porq:'Como a ansiedade social se tornou o motor invisível do consumo contemporâneo — e como marcas respondem com novos rituais de pertencimento.',link:'https://economist.com',tema:'Comportamento',data:'10/05/2026',dataISO:'2026-05-10'},
+  {id:1005,titulo:'O novo luxo brasileiro: entre ostentação e discernimento',fonte:'Consumoteca',porq:'Michel Alcoforado mapeia como as aspirações de consumo das classes médias brasileiras estão sendo recodificadas — com implicações diretas para marcas no Brasil.',link:'https://consumoteca.com.br',tema:'Consumo',data:'10/05/2026',dataISO:'2026-05-10'},
+];
+
+function initGaleria(){
+  const salva = localStorage.getItem('cc_galeria');
+  if(salva){
+    galeria = JSON.parse(salva);
+  } else {
+    galeria = [...FONTES_DEMO];
+    localStorage.setItem('cc_galeria', JSON.stringify(galeria));
+  }
+  renderTemaTagsGaleria();
+  renderGaleria();
+}
+
+function getTemas(){
+  const temas = [...new Set(galeria.map(f=>f.tema).filter(Boolean))].sort();
+  return temas;
+}
+
+function renderTemaTagsGaleria(){
+  const temas = getTemas();
+  const el = document.getElementById('gal-tema-tags');
+  el.innerHTML = temas.map(t=>`<button class="gal-tag tema-tag${galTemaAtivo===t?' on':''}" onclick="filtrarTema('${t}')">${t}</button>`).join('');
+}
+
+function filtrarTema(tema){
+  galTemaAtivo = galTemaAtivo===tema ? '' : tema;
+  renderTemaTagsGaleria();
+  renderGaleria();
+}
+
+function limparFiltrosGaleria(){
+  galTemaAtivo='';
+  document.getElementById('gal-data-de').value='';
+  document.getElementById('gal-data-ate').value='';
+  renderTemaTagsGaleria();
+  renderGaleria();
+}
+
+function renderGaleria(){
+  const de = document.getElementById('gal-data-de').value;
+  const ate = document.getElementById('gal-data-ate').value;
+
+  let filtradas = galeria.filter(f=>{
+    if(galTemaAtivo && f.tema !== galTemaAtivo) return false;
+    if(de && f.dataISO < de) return false;
+    if(ate && f.dataISO > ate) return false;
+    return true;
+  });
+
+  document.getElementById('gal-count').textContent = filtradas.length + ' fonte' + (filtradas.length!==1?'s':'') + ' encontrada' + (filtradas.length!==1?'s':'');
+
+  const el = document.getElementById('galeria-lista');
+  if(!filtradas.length){
+    el.innerHTML='<div class="gal-empty"><div class="gal-empty-title">Nenhuma fonte encontrada</div><div style="font-size:12px">Tente outros filtros ou adicione fontes manualmente acima</div></div>';
+    return;
+  }
+
+  // Agrupar por tema quando sem filtro de tema
+  if(!galTemaAtivo){
+    const porTema = {};
+    filtradas.forEach(f=>{ if(!porTema[f.tema]) porTema[f.tema]=[]; porTema[f.tema].push(f); });
+    el.innerHTML = Object.entries(porTema).map(([tema, fontes])=>`
+      <div style="margin-bottom:2rem">
+        <div style="font-size:10px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:.75rem;padding-bottom:.5rem;border-bottom:1px solid var(--gold-pale)">${tema} <span style="color:var(--ink-muted);font-weight:400">(${fontes.length})</span></div>
+        ${fontes.map(f=>fonteCardHTML(f)).join('')}
+      </div>
+    `).join('');
+  } else {
+    el.innerHTML = filtradas.map(f=>fonteCardHTML(f)).join('');
+  }
+}
+
+function fonteCardHTML(f){
+  return `<div class="fonte-card" id="fc-${f.id}">
+    <div class="fonte-card-header">
+      <div class="fonte-card-left">
+        <div class="fonte-card-fonte">${f.fonte||'Fonte não informada'}</div>
+        <div class="fonte-card-titulo">${f.titulo}</div>
+        <div class="fonte-card-porq">${f.porq||''}</div>
+      </div>
+    </div>
+    <div class="fonte-card-footer">
+      <span class="fonte-card-data">${f.data}</span>
+      <span class="fonte-card-tema">${f.tema||'Geral'}</span>
+      ${f.link?`<a class="fonte-card-link" href="${f.link}" target="_blank">Acessar →</a>`:''}
+      <button class="fonte-salvar-btn" style="margin-left:${f.link?'0':'auto'}" onclick="deletarFonte(${f.id})">Excluir</button>
+    </div>
+  </div>`;
+}
+
+function adicionarFonte(){
+  const titulo = document.getElementById('gal-add-titulo').value.trim();
+  if(!titulo){ toast('Informe pelo menos o título da fonte.'); return; }
+  const tema = document.getElementById('gal-add-tema').value.trim() || 'Geral';
+  const f = {
+    id: Date.now(),
+    titulo,
+    fonte: document.getElementById('gal-add-fonte').value.trim(),
+    porq: document.getElementById('gal-add-porq').value.trim(),
+    link: document.getElementById('gal-add-link').value.trim(),
+    tema,
+    data: new Date().toLocaleDateString('pt-BR'),
+    dataISO: new Date().toISOString().slice(0,10)
+  };
+  galeria.unshift(f);
+  salvarGaleria();
+  document.getElementById('gal-add-titulo').value='';
+  document.getElementById('gal-add-fonte').value='';
+  document.getElementById('gal-add-porq').value='';
+  document.getElementById('gal-add-link').value='';
+  document.getElementById('gal-add-tema').value='';
+  renderTemaTagsGaleria();
+  renderGaleria();
+  toast('Fonte salva na galeria!');
+}
+
+function deletarFonte(id){
+  if(!confirm('Excluir esta fonte da galeria?')) return;
+  galeria = galeria.filter(f=>f.id!==id);
+  salvarGaleria();
+  renderTemaTagsGaleria();
+  renderGaleria();
+  toast('Fonte excluída.');
+}
+
+function salvarGaleria(){
+  localStorage.setItem('cc_galeria', JSON.stringify(galeria));
+}
+
+// Salvar fontes do radar na galeria automaticamente
+function salvarFontesDoRadar(tema){
+  const radarFontes = [
+    {titulo:'Quiet Luxury Is Over. Now Comes "Loud Quiet"',fonte:'Business of Fashion',porq:'O movimento pós-quiet luxury está redefinindo como marcas comunicam exclusividade.',link:'https://www.businessoffashion.com',tema:tema||'Luxo'},
+    {titulo:'Why Brands Are Becoming Communities',fonte:'Harvard Business Review',porq:'A transição de marca como produto para marca como identidade coletiva.',link:'https://hbr.org',tema:tema||'Branding'},
+    {titulo:'AI Is Changing What Authentic Means Online',fonte:'MIT Technology Review',porq:'Com IA tornando conteúdo abundante, imperfeição humana vira ativo raro.',link:'https://technologyreview.com',tema:tema||'IA'},
+  ];
+  radarFontes.forEach(rf=>{
+    if(!galeria.find(g=>g.titulo===rf.titulo)){
+      galeria.unshift({id:Date.now()+Math.random(),data:new Date().toLocaleDateString('pt-BR'),dataISO:new Date().toISOString().slice(0,10),...rf});
+    }
+  });
+  salvarGaleria();
+  renderTemaTagsGaleria();
+  renderGaleria();
+}
+
+
+// ── TOAST ──
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),3000);
+}
+
+// fechar detalhe ao clicar fora
+document.getElementById('detalhe-overlay').addEventListener('click', function(e){
+  if(e.target===this) fecharDetalhe();
+});
+</script>
+</body>
+</html>
