@@ -346,20 +346,23 @@ body{background:var(--paper);font-family:var(--sans);color:var(--ink);min-height
       <input type="password" id="api-key-input" placeholder="sk-ant-api03-...">
       <div style="font-size:11px;color:var(--ink-muted);margin-bottom:4px;margin-top:.5rem">ID do Agente (opcional)</div>
       <input type="text" id="agent-id-input" placeholder="agent_01PdrfJPtcQL1pvF8GNcbvYL">
-      <div style="font-size:11px;color:var(--ink-muted);margin-top:4px;margin-bottom:.75rem">Se vazio, usa a API direta (mais compatível). Com agente, usa pesquisa web real.</div>
+      <div style="font-size:11px;color:var(--ink-muted);margin-bottom:4px;margin-top:.5rem">ID do Ambiente (obrigatório com agente)</div>
+      <input type="text" id="env-id-input" placeholder="env_01...">
+      <div style="font-size:11px;color:var(--ink-muted);margin-top:4px;margin-bottom:.75rem">Se vazio, usa a API direta (mais compatível). Com agente, requer ID do Agente + ID do Ambiente.</div>
       <button class="btn-gold" id="btn-salvar-key">Salvar Configuração</button>
       <div id="api-status" style="margin-top:.75rem;font-size:11px"></div>
     </div>
     <div style="background:var(--paper-warm);border:1px solid var(--border);padding:1rem;margin-bottom:1rem">
       <div style="font-size:10px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:.75rem">Modo de conexão</div>
       <div style="font-size:12px;color:var(--ink-soft);line-height:1.7">
-        <strong>Sem agente:</strong> Usa Messages API direto. Funciona sempre, sem pesquisa web real.<br>
-        <strong>Com agente:</strong> Usa o Mentor Cultural Noturno com pesquisa web. Requer ID do agente acima.
+        <strong>Sem agente:</strong> Usa Messages API direto (<code style="background:var(--paper-dark);padding:1px 4px">/v1/messages</code>). Funciona sempre, sem pesquisa web real.<br>
+        <strong>Com agente:</strong> Usa Managed Agents API (<code style="background:var(--paper-dark);padding:1px 4px">/v1/sessions</code>). Requer ID do Agente + ID do Ambiente. Permite pesquisa web real via ferramentas do agente.
       </div>
     </div>
     <p style="font-size:12px;color:var(--ink-muted);line-height:1.7">
       Chave em <a href="https://console.anthropic.com" target="_blank" style="color:var(--teal)">console.anthropic.com</a> → API Keys → Create Key.<br>
-      ID do agente: abra seu agente e copie o código <code style="background:var(--paper-dark);padding:1px 4px">agent_0...</code>
+      ID do agente: <a href="https://platform.claude.com" target="_blank" style="color:var(--teal)">platform.claude.com</a> → Managed Agents → copie o código <code style="background:var(--paper-dark);padding:1px 4px">agent_01...</code><br>
+      ID do ambiente: Managed Agents → Environments → copie o código <code style="background:var(--paper-dark);padding:1px 4px">env_01...</code>
     </p>
   </div>
 
@@ -445,8 +448,10 @@ function iniciarApp(){
 
   var key = localStorage.getItem('cc_apikey')||'';
   var agid = localStorage.getItem('cc_agentid')||'';
+  var envid = localStorage.getItem('cc_envid')||'';
   if(key) document.getElementById('api-key-input').value = key;
   if(agid) document.getElementById('agent-id-input').value = agid;
+  if(envid) document.getElementById('env-id-input').value = envid;
 
   renderAcervo();
   renderSessoes();
@@ -554,29 +559,68 @@ async function gerarSessao(){
     var texto = '';
 
     if(agentId){
-      // MODO AGENTE — com pesquisa web
-      var s1 = await fetch('https://api.anthropic.com/v1/agents/'+agentId+'/sessions', {
-        method:'POST',
-        headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-        body:JSON.stringify({})
+      // MODO AGENTE — Managed Agents API (managed-agents-2026-04-01)
+      var betaHdr = 'managed-agents-2026-04-01';
+      var aHdrs = {
+        'Content-Type':'application/json',
+        'x-api-key':key,
+        'anthropic-version':'2023-06-01',
+        'anthropic-beta':betaHdr,
+        'anthropic-dangerous-direct-browser-access':'true'
+      };
+      var envId = localStorage.getItem('cc_envid')||'';
+
+      // 1. Criar sessão em POST /v1/sessions
+      var sessBody = {agent:agentId};
+      if(envId) sessBody.environment_id = envId;
+      var s1 = await fetch('https://api.anthropic.com/v1/sessions', {
+        method:'POST', headers:aHdrs, body:JSON.stringify(sessBody)
       });
       var sd = await s1.json();
-      if(!sd.id) throw new Error('Sessão do agente falhou: '+JSON.stringify(sd));
-
-      var s2 = await fetch('https://api.anthropic.com/v1/agents/'+agentId+'/sessions/'+sd.id+'/messages', {
-        method:'POST',
-        headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-        body:JSON.stringify({messages:[{role:'user',content:prompt}],stream:false})
-      });
-      var dd = await s2.json();
-      if(dd.messages){
-        dd.messages.filter(function(m){ return m.role==='assistant'; }).forEach(function(m){
-          if(typeof m.content==='string') texto+=m.content;
-          else if(Array.isArray(m.content)) m.content.forEach(function(b){ if(b.type==='text') texto+=b.text; });
-        });
-      } else if(dd.content){
-        dd.content.forEach(function(b){ if(b.type==='text') texto+=b.text; });
+      if(!sd.id){
+        var em = (sd.error&&sd.error.message)||JSON.stringify(sd);
+        throw new Error('Falha ao criar sessão: '+em);
       }
+
+      // 2. Enviar mensagem via POST /v1/sessions/{id}/events
+      var s2 = await fetch('https://api.anthropic.com/v1/sessions/'+sd.id+'/events', {
+        method:'POST', headers:aHdrs,
+        body:JSON.stringify({events:[{type:'user.message',content:[{type:'text',text:prompt}]}]})
+      });
+      if(!s2.ok){
+        var e2 = await s2.json();
+        throw new Error('Erro ao enviar evento: '+((e2.error&&e2.error.message)||JSON.stringify(e2)));
+      }
+
+      // 3. Receber resposta via SSE GET /v1/sessions/{id}/stream
+      var sResp = await fetch('https://api.anthropic.com/v1/sessions/'+sd.id+'/stream', {
+        headers:{
+          'x-api-key':key,
+          'anthropic-version':'2023-06-01',
+          'anthropic-beta':betaHdr,
+          'anthropic-dangerous-direct-browser-access':'true',
+          'Accept':'text/event-stream'
+        }
+      });
+      var reader = sResp.body.getReader();
+      var dec = new TextDecoder();
+      var buf = '';
+      var doneSt = false;
+      while(!doneSt){
+        var chunk = await reader.read();
+        if(chunk.done) break;
+        buf += dec.decode(chunk.value, {stream:true});
+        var lines = buf.split('\n');
+        buf = lines.pop();
+        for(var li=0;li<lines.length;li++){
+          var ln = lines[li];
+          if(!ln.startsWith('data: ')) continue;
+          var ev; try{ ev=JSON.parse(ln.slice(6)); }catch(e){ continue; }
+          if(ev.type==='agent.message_delta'&&ev.delta&&ev.delta.type==='text_delta') texto+=ev.delta.text;
+          else if(ev.type==='session.status_idle'&&ev.stop_reason&&ev.stop_reason.type==='end_turn'){ doneSt=true; break; }
+        }
+      }
+      try{ reader.cancel(); }catch(e){}
     } else {
       // MODO DIRETO — Messages API sem agente
       var r = await fetch('https://api.anthropic.com/v1/messages', {
@@ -705,9 +749,11 @@ function salvarApiKey(){
   var k = document.getElementById('api-key-input').value.trim();
   if(!k){ toast('Cole sua chave de API.'); return; }
   var ag = document.getElementById('agent-id-input').value.trim();
+  var ev = document.getElementById('env-id-input').value.trim();
   try{ localStorage.setItem('cc_apikey', k); }catch(e){}
   try{ localStorage.setItem('cc_agentid', ag); }catch(e){}
-  var modo = ag ? 'Chave + Agente salvos ✓' : 'Chave salva (modo direto) ✓';
+  try{ localStorage.setItem('cc_envid', ev); }catch(e){}
+  var modo = ag ? 'Chave + Agente + Ambiente salvos ✓' : 'Chave salva (modo direto) ✓';
   document.getElementById('api-status').innerHTML = '<span style="color:var(--teal)">'+modo+'</span>';
   toast('Configuração salva! Volte em Sessão de Hoje.');
 }
