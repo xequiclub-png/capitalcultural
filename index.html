@@ -555,18 +555,27 @@ body{background:var(--paper);font-family:var(--sans);color:var(--ink);min-height
 const SENHA = 'cultural2025';
 
 function checkPassword(){
-  const v = document.getElementById('lock-input').value;
+  const v = document.getElementById('lock-input').value.trim();
+  const err = document.getElementById('lock-err');
+  if(!v){ err.textContent='Digite a senha.'; return; }
   if(v === SENHA){
     document.getElementById('lock').style.display='none';
     document.getElementById('app-content').style.display='block';
     init();
   } else {
-    document.getElementById('lock-err').textContent='Senha incorreta.';
+    err.textContent='Senha incorreta. Tente: cultural2025';
     document.getElementById('lock-input').value='';
     document.getElementById('lock-input').focus();
   }
 }
-document.getElementById('lock-input').addEventListener('keydown', e=>{ if(e.key==='Enter') checkPassword(); });
+
+// Garante que o botão funciona mesmo sem evento onclick no HTML
+document.addEventListener('DOMContentLoaded', function(){
+  var btn = document.getElementById('lock-btn');
+  if(btn) btn.onclick = checkPassword;
+  var inp = document.getElementById('lock-input');
+  if(inp) inp.addEventListener('keydown', function(e){ if(e.key==='Enter') checkPassword(); });
+});
 
 // ── INIT ──
 let acervo = [];
