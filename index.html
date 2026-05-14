@@ -685,17 +685,48 @@ Que padrão atravessa esses três movimentos? O que eles revelam sobre o que est
 
   // MODO REAL COM API
   try {
-    const prompt = `Você é um Curador Estratégico de Capital Cultural. Gere uma sessão diária completa (~30 min de leitura) sobre o tema: "${temaFinal}".
+    const hoje = new Date().toLocaleDateString('pt-BR', {weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    const seed = Date.now();
+    const prompt = `Você é um Curador Estratégico de Capital Cultural. Hoje é ${hoje}.
 
-Áreas de interesse do usuário: ${areas}.
+IMPORTANTE: Gere uma sessão COMPLETAMENTE NOVA e DIFERENTE a cada vez. Use o número aleatório ${seed} como semente para variar. NUNCA repita temas, fontes ou autores de sessões anteriores.
 
-Formato obrigatório:
-1. RADAR DO DIA (4-5 itens reais com fonte, título, por que importa, link)
-2. REFERÊNCIAS INTELECTUAIS (3-4 autores/obras conectados ao tema)
-3. CONEXÕES ESTRATÉGICAS (3-4 caminhos mentais abertos, sem conclusões fechadas)
-4. EXERCÍCIO DO DIA (1 pergunta provocativa para reflexão própria)
+Tema solicitado: "${temaFinal}"
+Áreas de interesse: ${areas}
 
-Regras: Não mastige conclusões. Não explique demais. Priorize profundidade. Use fontes reais e relevantes. Estimule pensamento crítico. NÃO responda a pergunta do exercício.`;
+FORMATO OBRIGATÓRIO — siga exatamente esta estrutura:
+
+━━━ TEMA CENTRAL ━━━
+[Título instigante e atual para a sessão de hoje — diferente de "O Luxo do Silêncio"]
+
+━━━ RADAR DO DIA ━━━
+Traga 5 fontes REAIS e RELEVANTES publicadas recentemente (2024-2026). Para cada uma:
+• FONTE: [veículo real — ex: The Economist, Wired, Folha, MIT Tech Review, BoF, FT, HBR, Bloomberg, Vogue Business, etc]
+• TÍTULO: [título real ou plausível do artigo]
+• POR QUE IMPORTA: [2-3 frases de contextualização — sem resumir demais]
+• LINK: [URL real do veículo]
+
+━━━ REFERÊNCIAS INTELECTUAIS ━━━
+4 autores/obras conectados ao tema. Para cada um:
+• AUTOR: [nome]
+• ÁREA: [campo]
+• INDICAÇÃO: [obra específica + por que ler agora]
+
+━━━ CONEXÕES ESTRATÉGICAS ━━━
+4 conexões entre cultura, comportamento, negócios e identidade.
+Formato: "→ [conexão em 1-2 frases, sem conclusão fechada]"
+
+━━━ EXERCÍCIO DO DIA ━━━
+Uma pergunta provocativa para o leitor desenvolver sua própria leitura crítica.
+NÃO responda a pergunta. Apenas formule com precisão.
+
+Regras absolutas:
+- NUNCA use o tema "O Luxo do Silêncio" — crie um tema novo
+- Varie entre branding, comportamento, IA, sociologia, poder, estética, consumo, feminilidade, geopolítica
+- Fontes devem ser veículos reais e respeitados
+- Não mastige conclusões
+- Estimule pensamento original
+- Profundidade acima de volume`;
 
     const resp = await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
