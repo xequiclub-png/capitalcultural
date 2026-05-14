@@ -790,34 +790,71 @@ REGRAS ABSOLUTAS:
 - Varie MUITO entre sessões — use a semente ${seed} para ser imprevisível
 - Tom: inteligente mas acessível, como um amigo culto conversando à noite`;
 
-    const resp = await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'x-api-key':key,
-        'anthropic-version':'2023-06-01',
-        'anthropic-dangerous-direct-browser-access':'true'
+    // Chama o Agente Mentor Cultural via API
+    const agentId = 'agent_01PdrfJPtcQL1pvF8GNcbvYL';
+    
+    // Passo 1: criar sessão do agente
+    const sessaoResp = await fetch(`https://api.anthropic.com/v1/agents/${agentId}/sessions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
       },
-      body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:2000,messages:[{role:'user',content:prompt}]})
+      body: JSON.stringify({})
     });
-    const data = await resp.json();
+    const sessaoData = await sessaoResp.json();
+    if(!sessaoData.id) throw new Error('Erro ao criar sessão: ' + JSON.stringify(sessaoData));
+    const sessionId = sessaoData.id;
+
+    // Passo 2: enviar mensagem ao agente
+    const msgResp = await fetch(`https://api.anthropic.com/v1/agents/${agentId}/sessions/${sessionId}/messages`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        messages: [{ role: 'user', content: prompt }],
+        stream: false
+      })
+    });
+    const data = await msgResp.json();
     load.classList.remove('show');
 
-    if(data.content && data.content[0]){
-      const texto = data.content[0].text;
-      document.getElementById('ia-resultado-titulo').textContent='✦ Sessão: '+temaFinal;
-      document.getElementById('ia-resultado-body').textContent=texto;
+    // Extrai texto da resposta do agente
+    let texto = '';
+    if(data.messages){
+      // formato agentes API
+      const assistantMsgs = data.messages.filter(m => m.role === 'assistant');
+      assistantMsgs.forEach(m => {
+        if(typeof m.content === 'string') texto += m.content;
+        else if(Array.isArray(m.content)) m.content.forEach(b => { if(b.type==='text') texto += b.text; });
+      });
+    } else if(data.content){
+      // fallback formato messages API
+      data.content.forEach(b => { if(b.type==='text') texto += b.text; });
+    }
+
+    if(texto){
+      document.getElementById('ia-resultado-titulo').textContent = '✦ Sessão: ' + (temaFinal || 'Curadoria do Dia');
+      document.getElementById('ia-resultado-body').textContent = texto;
       res.classList.add('show');
 
-      // Extrai exercício
-      const match = texto.match(/EXERCÍCIO DO DIA[\s\S]*?(\n.+)/i);
-      if(match) document.getElementById('exercicio-pergunta').textContent = match[1].replace(/^[-–—*•]+\s*/,'').trim();
+      // Extrai reflexão de fechamento
+      const match = texto.match(/FECHAMENTO[\s\S]*?(
+.{20,})/i);
+      if(match) document.getElementById('exercicio-pergunta').textContent = match[1].replace(/^[-–—*•🎯]+\s*/,'').trim();
 
-      // Atualiza tema
-      document.getElementById('tema-titulo').textContent = temaFinal;
+      // Atualiza tema no card
+      const temaMatch = texto.match(/TEMA CENTRAL[\s\S]*?:\s*(.+)/i);
+      if(temaMatch) document.getElementById('tema-titulo').textContent = temaMatch[1].trim();
       document.getElementById('sessao-num').textContent = 'Sessão #'+(acervo.length+1).toString().padStart(3,'0');
 
-      toast('Sessão gerada com IA!');
+      toast('Sessão gerada pelo Mentor Cultural!');
     } else {
       throw new Error(JSON.stringify(data));
     }
