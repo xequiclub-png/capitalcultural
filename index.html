@@ -205,10 +205,11 @@ body{background:var(--paper);font-family:var(--sans);color:var(--ink);min-height
     <div style="font-size:12px;color:rgba(250,249,246,.35);margin-top:.5rem;letter-spacing:.05em">Sistema de Curadoria Estratégica</div>
   </div>
   <div id="lock-form">
-    <input id="lock-input" type="password" placeholder="••••••••••" autocomplete="current-password">
-    <button id="lock-btn" onclick="checkPassword()">Entrar</button>
+    <input id="lock-input" type="password" placeholder="••••••••••" autocomplete="off"
+      onkeydown="if(event.key==='Enter'){var v=this.value.trim();if(v==='cultural2025'){document.getElementById('lock').style.display='none';document.getElementById('app-content').style.display='block';init();}else{document.getElementById('lock-err').textContent='Senha incorreta.';this.value='';}}">
+    <button onclick="var v=document.getElementById('lock-input').value.trim();if(v==='cultural2025'){document.getElementById('lock').style.display='none';document.getElementById('app-content').style.display='block';init();}else{document.getElementById('lock-err').textContent='Senha incorreta.';document.getElementById('lock-input').value='';}">Entrar</button>
     <div id="lock-err"></div>
-    <div id="lock-hint">Pressione Enter para continuar</div>
+    <div id="lock-hint">Senha: cultural2025</div>
   </div>
 </div>
 
